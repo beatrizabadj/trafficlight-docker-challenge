@@ -1,0 +1,58 @@
+# defining all three services that share the same network
+services: 
+  red-app:
+    image: trafficlight/red:v1.0
+    container_name: red-app
+    networks:
+      - traffic-light
+  yellow-app:
+    image: trafficlight/yellow:v1.0
+    container_name: yellow-app
+    networks:
+      - traffic-light
+  green-app:
+    image: trafficlight/green:v1.0
+    container_name: green-app
+    networks:
+      - traffic-light
+  # nginx-load-balancer:
+  #     image: nginx:1.21
+  #     container_name: nginx-load-balancer
+  #     ports:
+  #       - "3000:3000"
+  #       - "4000:4000"
+  #       - "5000:5000"
+  #     volumes:
+  #       - ./nginx/conf.d:/etc/nginx/conf.d
+  #     networks:
+  #       - traffic-light
+  #     depends_on:
+  #       - red-app
+  #       - yellow-app
+  #       - green-app
+
+  # mounts the paths from the host to the container
+
+  nginx-load-balancer:
+    image: nginx:1.21
+    container_name: nginx-load-balancer
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/conf.d/logs:/var/log/nginx
+      - ./nginx/conf.d/.htpasswd:/etc/nginx/conf.d/.htpasswd
+    networks:
+      - traffic-light
+    depends_on:
+      - red-app
+      - yellow-app
+      - green-app
+
+
+networks:
+  traffic-light:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
